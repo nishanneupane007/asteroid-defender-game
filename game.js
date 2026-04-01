@@ -48,94 +48,106 @@ let sounds = {};
 function initAudio() {
     if (audioContext) return;
     
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
-    sounds = {
-        shoot: function() {
-            const oscillator = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            oscillator.connect(gain);
-            gain.connect(audioContext.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 800;
-            gain.gain.value = 0.2;
-            oscillator.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
-            oscillator.stop(audioContext.currentTime + 0.3);
-        },
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
-        explosion: function() {
-            const noise = audioContext.createBufferSource();
-            const bufferSize = audioContext.sampleRate * 0.5;
-            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
+        sounds = {
+            shoot: function() {
+                if (!audioContext) return;
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 800;
+                gain.gain.value = 0.2;
+                oscillator.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            },
+            
+            explosion: function() {
+                if (!audioContext) return;
+                const noise = audioContext.createBufferSource();
+                const bufferSize = audioContext.sampleRate * 0.5;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = buffer;
+                
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1000;
+                
+                const gain = audioContext.createGain();
+                gain.gain.value = 0.3;
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                noise.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.8);
+            },
+            
+            powerup: function() {
+                if (!audioContext) return;
+                const oscillator = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                oscillator.connect(gain);
+                gain.connect(audioContext.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 523.25;
+                gain.gain.value = 0.2;
+                oscillator.start();
+                
+                oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            },
+            
+            gameover: function() {
+                if (!audioContext) return;
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                oscillator1.connect(gain);
+                oscillator2.connect(gain);
+                gain.connect(audioContext.destination);
+                
+                oscillator1.type = 'sawtooth';
+                oscillator1.frequency.value = 220;
+                oscillator2.type = 'sawtooth';
+                oscillator2.frequency.value = 110;
+                
+                gain.gain.value = 0.3;
+                
+                oscillator1.start();
+                oscillator2.start();
+                
+                oscillator1.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
+                oscillator2.frequency.exponentialRampToValueAtTime(27.5, audioContext.currentTime + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.6);
+                
+                oscillator1.stop(audioContext.currentTime + 0.6);
+                oscillator2.stop(audioContext.currentTime + 0.6);
             }
-            noise.buffer = buffer;
-            
-            const filter = audioContext.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.value = 1000;
-            
-            const gain = audioContext.createGain();
-            gain.gain.value = 0.3;
-            
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioContext.destination);
-            
-            noise.start();
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.8);
-        },
-        
-        powerup: function() {
-            const oscillator = audioContext.createOscillator();
-            const gain = audioContext.createGain();
-            oscillator.connect(gain);
-            gain.connect(audioContext.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 523.25;
-            gain.gain.value = 0.2;
-            oscillator.start();
-            
-            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.2);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
-            oscillator.stop(audioContext.currentTime + 0.3);
-        }
-    };
-     gameover: function() {
-        const oscillator1 = audioContext.createOscillator();
-        const oscillator2 = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        
-        oscillator1.connect(gain);
-        oscillator2.connect(gain);
-        gain.connect(audioContext.destination);
-        
-        oscillator1.type = 'sawtooth';
-        oscillator1.frequency.value = 220;
-        oscillator2.type = 'sawtooth';
-        oscillator2.frequency.value = 110;
-        
-        gain.gain.value = 0.3;
-        
-        oscillator1.start();
-        oscillator2.start();
-
-         // Descending tone for death sound
-        oscillator1.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
-        oscillator2.frequency.exponentialRampToValueAtTime(27.5, audioContext.currentTime + 0.5);
-        gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.6);
-        
-        oscillator1.stop(audioContext.currentTime + 0.6);
-        oscillator2.stop(audioContext.currentTime + 0.6);
+        };
+    } catch(e) {
+        console.log("Audio not supported:", e);
     }
 }
 
 function playSound(soundName) {
     if (audioContext && sounds[soundName]) {
-        sounds[soundName]();
+        try {
+            sounds[soundName]();
+        } catch(e) {
+            console.log("Error playing sound:", e);
+        }
     }
 }
 
@@ -187,8 +199,10 @@ function checkHighScore(scoreValue) {
     const lowestScore = leaderboard.length >= 10 ? leaderboard[9].score : 0;
     
     if (scoreValue > lowestScore || leaderboard.length < 10) {
-        document.getElementById('leaderboardInput').style.display = 'block';
-        document.getElementById('playerName').focus();
+        const inputDiv = document.getElementById('leaderboardInput');
+        if (inputDiv) inputDiv.style.display = 'block';
+        const nameInput = document.getElementById('playerName');
+        if (nameInput) nameInput.focus();
     }
 }
 
@@ -199,7 +213,8 @@ function saveScoreToLeaderboard(name) {
     leaderboard.sort((a, b) => b.score - a.score);
     leaderboard = leaderboard.slice(0, 10);
     saveLeaderboard();
-    document.getElementById('leaderboardInput').style.display = 'none';
+    const inputDiv = document.getElementById('leaderboardInput');
+    if (inputDiv) inputDiv.style.display = 'none';
 }
 
 // Input Handling
@@ -235,63 +250,67 @@ document.addEventListener('keyup', (e) => {
 });
 
 // ============ MOBILE CONTROLS ============
-let touchActive = false;
-
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    
-    player.x = touchX - player.width/2;
-    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-    
-    if (gameRunning && !paused && player.shootCooldown <= 0) {
-        shoot();
-    }
-    
-    touchActive = true;
-});
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    
-    player.x = touchX - player.width/2;
-    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-});
-
-canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    touchActive = false;
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    if (gameRunning && !paused) {
+if (canvas) {
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        player.x = mouseX - player.width/2;
+        const touchX = e.touches[0].clientX - rect.left;
+        
+        player.x = touchX - player.width/2;
         player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-    }
-});
+        
+        if (gameRunning && !paused && player.shootCooldown <= 0) {
+            shoot();
+        }
+    });
 
-canvas.addEventListener('click', (e) => {
-    if (gameRunning && !paused && player.shootCooldown <= 0) {
-        shoot();
-    }
-});
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const touchX = e.touches[0].clientX - rect.left;
+        
+        player.x = touchX - player.width/2;
+        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    });
 
-// Button Event Listeners
-document.getElementById('startBtn').addEventListener('click', startGame);
-document.getElementById('restartBtn').addEventListener('click', startGame);
-document.getElementById('resumeBtn').addEventListener('click', togglePause);
-document.getElementById('quitBtn').addEventListener('click', () => {
+    canvas.addEventListener('mousemove', (e) => {
+        if (gameRunning && !paused) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            player.x = mouseX - player.width/2;
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+    });
+
+    canvas.addEventListener('click', (e) => {
+        if (gameRunning && !paused && player.shootCooldown <= 0) {
+            shoot();
+        }
+    });
+}
+
+// Button Event Listeners - with null checks
+const startBtn = document.getElementById('startBtn');
+if (startBtn) startBtn.addEventListener('click', startGame);
+
+const restartBtn = document.getElementById('restartBtn');
+if (restartBtn) restartBtn.addEventListener('click', startGame);
+
+const resumeBtn = document.getElementById('resumeBtn');
+if (resumeBtn) resumeBtn.addEventListener('click', togglePause);
+
+const quitBtn = document.getElementById('quitBtn');
+if (quitBtn) quitBtn.addEventListener('click', () => {
     gameRunning = false;
     showMenu();
 });
-document.getElementById('difficulty').addEventListener('change', (e) => {
-    difficulty = e.target.value;
-});
+
+const difficultySelect = document.getElementById('difficulty');
+if (difficultySelect) {
+    difficultySelect.addEventListener('change', (e) => {
+        difficulty = e.target.value;
+    });
+}
 
 // Shooting Function
 function shoot() {
@@ -304,11 +323,12 @@ function shoot() {
     });
     
     player.shootCooldown = 10;
-    
     playSound('shoot');
     
-    canvas.style.animation = 'shoot-effect 0.1s ease-out';
-    setTimeout(() => canvas.style.animation = '', 100);
+    if (canvas) {
+        canvas.style.animation = 'shoot-effect 0.1s ease-out';
+        setTimeout(() => { if (canvas) canvas.style.animation = ''; }, 100);
+    }
 }
 
 // Spawn Asteroid
@@ -323,8 +343,7 @@ function spawnAsteroid() {
         height: size,
         speed: difficultySettings[difficulty].asteroidSpeed + Math.random() * 2,
         rotation: 0,
-        rotationSpeed: (Math.random() - 0.5) * 0.1,
-        points: Math.floor(100 / (size / 20))
+        rotationSpeed: (Math.random() - 0.5) * 0.1
     });
 }
 
@@ -368,11 +387,14 @@ function updatePlayer() {
         player.powerupTimer--;
         if (player.powerupTimer <= 0) {
             player.powerupActive = false;
-            document.getElementById('powerupIndicator').style.opacity = '0';
+            const indicator = document.getElementById('powerupIndicator');
+            if (indicator) indicator.style.opacity = '0';
         } else {
-            document.getElementById('powerupIndicator').textContent = 
-                `🔥 POWERUP: ${Math.ceil(player.powerupTimer / 60)}s`;
-            document.getElementById('powerupIndicator').style.opacity = '1';
+            const indicator = document.getElementById('powerupIndicator');
+            if (indicator) {
+                indicator.textContent = `🔥 POWERUP: ${Math.ceil(player.powerupTimer / 60)}s`;
+                indicator.style.opacity = '1';
+            }
         }
     }
     
@@ -408,12 +430,6 @@ function updateAsteroids() {
         asteroids[i].rotation += asteroids[i].rotationSpeed;
         
         if (asteroids[i].y > canvas.height + asteroids[i].height) {
-            asteroids.splice(i, 1);
-            i--;
-            continue;
-        }
-        
-        if (asteroids[i].y + asteroids[i].height < 0) {
             asteroids.splice(i, 1);
             i--;
             continue;
@@ -611,24 +627,28 @@ function drawStars() {
 
 // UI Updates
 function updateScore() {
-    document.getElementById('score').textContent = score;
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) scoreElement.textContent = score;
+    
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('asteroidHighScore', highScore);
-        document.getElementById('highScore').textContent = highScore;
+        const highScoreElement = document.getElementById('highScore');
+        if (highScoreElement) highScoreElement.textContent = highScore;
     }
     
     const newLevel = Math.floor(score / 500) + 1;
     if (newLevel > level) {
         level = newLevel;
-        document.getElementById('level').textContent = level;
+        const levelElement = document.getElementById('level');
+        if (levelElement) levelElement.textContent = level;
         createParticles(canvas.width/2, canvas.height/2, '#00ff00');
     }
 }
 
 function updateLivesDisplay() {
     const livesSpan = document.getElementById('lives');
-    livesSpan.textContent = '❤️'.repeat(lives);
+    if (livesSpan) livesSpan.textContent = '❤️'.repeat(lives);
 }
 
 // Game Loop
@@ -718,13 +738,22 @@ function startGame() {
     
     updateScore();
     updateLivesDisplay();
-    document.getElementById('level').textContent = '1';
-    document.getElementById('highScore').textContent = highScore;
     
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('gameOver').style.display = 'none';
-    document.getElementById('pauseMenu').style.display = 'none';
-    document.getElementById('powerupIndicator').style.opacity = '0';
+    const levelElement = document.getElementById('level');
+    if (levelElement) levelElement.textContent = '1';
+    
+    const highScoreElement = document.getElementById('highScore');
+    if (highScoreElement) highScoreElement.textContent = highScore;
+    
+    const menu = document.getElementById('menu');
+    const gameOver = document.getElementById('gameOver');
+    const pauseMenu = document.getElementById('pauseMenu');
+    const powerupIndicator = document.getElementById('powerupIndicator');
+    
+    if (menu) menu.style.display = 'none';
+    if (gameOver) gameOver.style.display = 'none';
+    if (pauseMenu) pauseMenu.style.display = 'none';
+    if (powerupIndicator) powerupIndicator.style.opacity = '0';
     
     for (let i = 0; i < 4; i++) {
         setTimeout(() => {
@@ -735,56 +764,61 @@ function startGame() {
 
 function gameOver() {
     gameRunning = false;
-    document.getElementById('finalScore').textContent = score;
-    document.getElementById('gameOver').style.display = 'block';
-    checkHighScore(score);
+    const finalScoreElement = document.getElementById('finalScore');
+    if (finalScoreElement) finalScoreElement.textContent = score;
+    
+    const gameOverElement = document.getElementById('gameOver');
+    if (gameOverElement) gameOverElement.style.display = 'block';
+    
     playSound('gameover');
+    checkHighScore(score);
 }
 
 function togglePause() {
     if (!gameRunning) return;
     paused = !paused;
-    document.getElementById('pauseMenu').style.display = paused ? 'block' : 'none';
+    const pauseMenu = document.getElementById('pauseMenu');
+    if (pauseMenu) pauseMenu.style.display = paused ? 'block' : 'none';
 }
 
 function showMenu() {
     gameRunning = false;
-    document.getElementById('menu').style.display = 'block';
-    document.getElementById('gameOver').style.display = 'none';
-    document.getElementById('pauseMenu').style.display = 'none';
+    const menu = document.getElementById('menu');
+    const gameOver = document.getElementById('gameOver');
+    const pauseMenu = document.getElementById('pauseMenu');
+    
+    if (menu) menu.style.display = 'block';
+    if (gameOver) gameOver.style.display = 'none';
+    if (pauseMenu) pauseMenu.style.display = 'none';
 }
 
-// ============ INITIALIZATION CODE (ALL NEW FEATURES) ============
-// This is where all the initialization happens - ADD THIS SECTION
-
+// ============ INITIALIZATION ============
 function initializeNewFeatures() {
-    // Load leaderboard
     loadLeaderboard();
     
     // Show "How to Play" for first-time visitors
     if (!localStorage.getItem('hasSeenHowToPlay')) {
         setTimeout(() => {
             const howToPlay = document.getElementById('howToPlay');
-            if (howToPlay) {
-                howToPlay.style.display = 'flex';
-            }
+            if (howToPlay) howToPlay.style.display = 'flex';
         }, 500);
         localStorage.setItem('hasSeenHowToPlay', 'true');
     }
     
     // Close popup handlers
     const closeHowToPlayBtn = document.getElementById('closeHowToPlay');
-    const closePopupBtn = document.querySelector('.close-popup');
-    
     if (closeHowToPlayBtn) {
         closeHowToPlayBtn.addEventListener('click', () => {
-            document.getElementById('howToPlay').style.display = 'none';
+            const howToPlay = document.getElementById('howToPlay');
+            if (howToPlay) howToPlay.style.display = 'none';
         });
     }
     
+    const closePopupBtn = document.querySelector('.close-popup');
     if (closePopupBtn) {
         closePopupBtn.addEventListener('click', () => {
-            document.getElementById('howToPlay').style.display = 'none';
+            const howToPlay = document.getElementById('howToPlay');
+            if (howToPlay) howToPlay.style.display = 'none';
         });
     }
     
@@ -809,7 +843,8 @@ function initializeNewFeatures() {
     const closeLeaderboardBtn = document.getElementById('closeLeaderboard');
     if (closeLeaderboardBtn) {
         closeLeaderboardBtn.addEventListener('click', () => {
-            document.getElementById('leaderboard').style.display = 'none';
+            const leaderboard = document.getElementById('leaderboard');
+            if (leaderboard) leaderboard.style.display = 'none';
         });
     }
     
@@ -817,25 +852,28 @@ function initializeNewFeatures() {
     const saveScoreBtn = document.getElementById('saveScore');
     if (saveScoreBtn) {
         saveScoreBtn.addEventListener('click', () => {
-            const name = document.getElementById('playerName').value;
+            const nameInput = document.getElementById('playerName');
+            const name = nameInput ? nameInput.value : '';
             saveScoreToLeaderboard(name);
         });
     }
     
-    // Show leaderboard button in menu
+    // Show leaderboard button
     const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
     if (showLeaderboardBtn) {
         showLeaderboardBtn.addEventListener('click', () => {
-            const leaderboardElement = document.getElementById('leaderboard');
-            if (leaderboardElement.style.display === 'none' || !leaderboardElement.style.display) {
-                leaderboardElement.style.display = 'block';
-            } else {
-                leaderboardElement.style.display = 'none';
+            const leaderboard = document.getElementById('leaderboard');
+            if (leaderboard) {
+                if (leaderboard.style.display === 'none' || !leaderboard.style.display) {
+                    leaderboard.style.display = 'block';
+                } else {
+                    leaderboard.style.display = 'none';
+                }
             }
         });
     }
     
-    // Initialize audio on first user interaction
+    // Initialize audio on first interaction
     const initAudioOnClick = () => {
         initAudio();
         document.removeEventListener('click', initAudioOnClick);
@@ -849,13 +887,10 @@ function initializeNewFeatures() {
 // Initialize Game
 function init() {
     updateLivesDisplay();
-    document.getElementById('highScore').textContent = highScore;
+    const highScoreElement = document.getElementById('highScore');
+    if (highScoreElement) highScoreElement.textContent = highScore;
     showMenu();
-    
-    // Initialize all new features
     initializeNewFeatures();
-    
-    // Start game loop
     gameLoop();
 }
 
