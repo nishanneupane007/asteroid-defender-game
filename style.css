@@ -13,20 +13,42 @@ body {
     align-items: center;
     font-family: 'Courier New', 'Monaco', monospace;
     overflow: hidden;
+    touch-action: pan-x pan-y; /* Allow touch but prevent pinch zoom */
 }
 
 .game-container {
     position: relative;
-    box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
-    border-radius: 10px;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 }
 
 #gameCanvas {
     display: block;
-    background: radial-gradient(circle at center, #0a0f2a 0%, #03050b 100%);
+    width: 100%;
+    height: auto;
+    max-height: 100vh;
+    object-fit: contain;
     cursor: none;
-    border: 2px solid rgba(0, 255, 255, 0.3);
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
     border-radius: 8px;
+}
+
+/* Desktop fixed size */
+@media (min-width: 769px) {
+    .game-container {
+        height: auto;
+    }
+    
+    #gameCanvas {
+        width: 1000px;
+        height: 700px;
+    }
 }
 
 .ui-overlay {
@@ -39,6 +61,7 @@ body {
     pointer-events: none;
     font-weight: bold;
     text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+    z-index: 10;
 }
 
 .score-board {
@@ -94,8 +117,30 @@ body {
     color: #0ff;
     border: 2px solid #0ff;
     box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
-    z-index: 10;
+    z-index: 20;
     min-width: 350px;
+}
+
+@media (max-width: 768px) {
+    .menu, .pause-menu, .game-over {
+        min-width: 280px;
+        padding: 25px;
+        width: 90%;
+    }
+    
+    .menu h1 {
+        font-size: 24px;
+    }
+    
+    .score-board {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+    
+    .lives {
+        font-size: 18px;
+        padding: 5px 10px;
+    }
 }
 
 .menu h1, .pause-menu h2, .game-over h2 {
@@ -132,6 +177,18 @@ button {
 button:hover {
     transform: scale(1.05);
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.game-over-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.game-over-buttons button {
+    width: 100%;
+    margin: 5px 0;
 }
 
 .difficulty {
@@ -185,6 +242,14 @@ button:hover {
     animation: slideUp 0.3s ease-out;
 }
 
+@media (max-width: 768px) {
+    .how-to-play-content {
+        margin: 20px;
+        padding: 20px;
+        max-height: 90vh;
+    }
+}
+
 .close-popup {
     position: absolute;
     top: 15px;
@@ -212,6 +277,13 @@ button:hover {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+    .controls-guide {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
 }
 
 .control-section {
@@ -274,6 +346,14 @@ button:hover {
     transform: scale(0.95);
 }
 
+@media (max-width: 768px) {
+    .shoot-button {
+        width: 70px;
+        height: 70px;
+        font-size: 16px;
+    }
+}
+
 /* Leaderboard */
 .leaderboard {
     position: fixed;
@@ -289,6 +369,17 @@ button:hover {
     z-index: 150;
     pointer-events: auto;
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .leaderboard {
+        width: 85%;
+        max-width: 300px;
+        right: 50%;
+        transform: translateX(50%);
+        top: 50%;
+        bottom: auto;
+    }
 }
 
 .leaderboard-header {
@@ -435,186 +526,4 @@ button:hover {
 .leaderboard-list::-webkit-scrollbar-thumb:hover,
 .how-to-play-content::-webkit-scrollbar-thumb:hover {
     background: #ffaa44;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .menu, .pause-menu, .game-over {
-        min-width: 280px;
-        padding: 25px;
-    }
-    
-    .menu h1 {
-        font-size: 24px;
-    }
-    
-    .score-board {
-        font-size: 12px;
-        padding: 5px 10px;
-    }
-    
-    .lives {
-        font-size: 18px;
-        padding: 5px 10px;
-    }
-    
-    .leaderboard {
-        top: auto;
-        bottom: 100px;
-        right: 10px;
-        left: auto;
-        transform: none;
-        min-width: 250px;
-        max-height: 400px;
-    }
-    
-    .how-to-play-content {
-        margin: 20px;
-        padding: 20px;
-        max-height: 90vh;
-    }
-    
-    .controls-guide {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .control-section h3 {
-        font-size: 16px;
-    }
-    
-    .control-section p {
-        font-size: 12px;
-    }
-    
-    button {
-        padding: 8px 20px;
-        font-size: 14px;
-    }
-    
-    .shoot-button {
-        width: 70px;
-        height: 70px;
-        font-size: 16px;
-    }
-}
-
-/* Tablet Styles */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .leaderboard {
-        min-width: 260px;
-    }
-    
-    .controls-guide {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* Desktop Hover Effects */
-@media (min-width: 1025px) {
-    .shoot-button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
-    }
-}
-/* Better Mobile Responsiveness */
-@media (max-width: 768px) {
-    .game-container {
-        width: 100vw;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    #gameCanvas {
-        width: 100%;
-        height: auto;
-        max-width: 100vw;
-        max-height: 100vh;
-        object-fit: contain;
-    }
-    
-    .game-over-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 20px;
-    }
-    
-    .game-over-buttons button {
-        width: 100%;
-        margin: 5px 0;
-    }
-    
-    .menu, .pause-menu, .game-over {
-        width: 90%;
-        max-width: 350px;
-        padding: 20px;
-    }
-    
-    .menu h1 {
-        font-size: 24px;
-    }
-    
-    .score-board {
-        font-size: 12px;
-        padding: 5px 8px;
-    }
-    
-    .lives {
-        font-size: 16px;
-        padding: 5px 8px;
-    }
-    
-    .shoot-button {
-        width: 70px;
-        height: 70px;
-        font-size: 16px;
-    }
-    
-    .leaderboard {
-        width: 85%;
-        max-width: 300px;
-        right: 50%;
-        transform: translateX(50%);
-        top: 50%;
-        bottom: auto;
-    }
-}
-
-/* Landscape mode optimization */
-@media (max-width: 768px) and (orientation: landscape) {
-    .score-board {
-        font-size: 10px;
-        padding: 3px 6px;
-    }
-    
-    .lives {
-        font-size: 14px;
-        padding: 3px 6px;
-    }
-    
-    .shoot-button {
-        width: 60px;
-        height: 60px;
-        font-size: 14px;
-    }
-    
-    .menu, .pause-menu, .game-over {
-        padding: 15px;
-        width: 80%;
-    }
-    
-    .menu h1 {
-        font-size: 20px;
-    }
-}
-
-/* Desktop styles for canvas size */
-@media (min-width: 769px) {
-    #gameCanvas {
-        width: 1000px;
-        height: 700px;
-    }
 }
