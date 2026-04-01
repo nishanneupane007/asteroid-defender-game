@@ -104,6 +104,33 @@ function initAudio() {
             oscillator.stop(audioContext.currentTime + 0.3);
         }
     };
+     gameover: function() {
+        const oscillator1 = audioContext.createOscillator();
+        const oscillator2 = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        oscillator1.connect(gain);
+        oscillator2.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        oscillator1.type = 'sawtooth';
+        oscillator1.frequency.value = 220;
+        oscillator2.type = 'sawtooth';
+        oscillator2.frequency.value = 110;
+        
+        gain.gain.value = 0.3;
+        
+        oscillator1.start();
+        oscillator2.start();
+
+         // Descending tone for death sound
+        oscillator1.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
+        oscillator2.frequency.exponentialRampToValueAtTime(27.5, audioContext.currentTime + 0.5);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.6);
+        
+        oscillator1.stop(audioContext.currentTime + 0.6);
+        oscillator2.stop(audioContext.currentTime + 0.6);
+    }
 }
 
 function playSound(soundName) {
@@ -398,6 +425,7 @@ function updateAsteroids() {
                 updateLivesDisplay();
                 player.invincibleFrames = 60;
                 createParticles(player.x + player.width/2, player.y + player.height/2, '#ff0000');
+                playSound('explosion');
                 
                 if (lives <= 0) {
                     gameOver();
@@ -710,6 +738,7 @@ function gameOver() {
     document.getElementById('finalScore').textContent = score;
     document.getElementById('gameOver').style.display = 'block';
     checkHighScore(score);
+    playSound('gameover');
 }
 
 function togglePause() {
