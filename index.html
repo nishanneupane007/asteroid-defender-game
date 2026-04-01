@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Asteroid Defender - Space Shooter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-overlay">
+            <div class="score-board">
+                <div>SCORE: <span id="score">0</span></div>
+                <div>HIGH SCORE: <span id="highScore">0</span></div>
+                <div>LEVEL: <span id="level">1</span></div>
+            </div>
+            <div class="lives">
+                <span id="lives"></span>
+            </div>
+            <div class="powerup-indicator" id="powerupIndicator"></div>
+        </div>
+        <div class="menu" id="menu">
+            <h1>🚀 ASTEROID DEFENDER</h1>
+            <div class="instructions">
+                <p>← → or A/D to move</p>
+                <p>SPACE or ↑ to shoot</p>
+                <p>P to pause</p>
+            </div>
+            <button id="startBtn">START GAME</button>
+            <div class="difficulty">
+                <label>Difficulty:</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="pause-menu" id="pauseMenu" style="display: none;">
+            <h2>PAUSED</h2>
+            <button id="resumeBtn">RESUME</button>
+            <button id="quitBtn">QUIT</button>
+        </div>
+        <div class="game-over" id="gameOver" style="display: none;">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button id="restartBtn">PLAY AGAIN</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

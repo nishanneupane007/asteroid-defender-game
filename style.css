@@ -1,0 +1,158 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    background: linear-gradient(135deg, #0a0e27 0%, #000000 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Courier New', 'Monaco', monospace;
+    overflow: hidden;
+}
+
+.game-container {
+    position: relative;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+#gameCanvas {
+    display: block;
+    background: radial-gradient(circle at center, #0a0f2a 0%, #03050b 100%);
+    cursor: none;
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+.ui-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.score-board {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 5px;
+    backdrop-filter: blur(5px);
+    color: #0ff;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.score-board div {
+    margin: 5px 0;
+}
+
+.lives {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 5px;
+    backdrop-filter: blur(5px);
+    font-size: 24px;
+    letter-spacing: 5px;
+}
+
+.powerup-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 255, 255, 0.8);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+
+.menu, .pause-menu, .game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    color: #0ff;
+    border: 2px solid #0ff;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+    z-index: 10;
+    min-width: 350px;
+}
+
+.menu h1, .pause-menu h2, .game-over h2 {
+    margin-bottom: 20px;
+    font-size: 32px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.instructions {
+    margin: 20px 0;
+    font-size: 14px;
+    color: #fff;
+}
+
+.instructions p {
+    margin: 8px 0;
+}
+
+button {
+    background: linear-gradient(135deg, #0ff, #00aaff);
+    color: #000;
+    border: none;
+    padding: 12px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-family: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.difficulty {
+    margin: 20px 0;
+}
+
+.difficulty select {
+    background: #000;
+    color: #0ff;
+    border: 1px solid #0ff;
+    padding: 5px 10px;
+    margin-left: 10px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.shoot-effect {
+    animation: pulse 0.1s ease-out;
+}
