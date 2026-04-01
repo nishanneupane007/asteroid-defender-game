@@ -771,7 +771,20 @@ function gameOver() {
     if (gameOverElement) gameOverElement.style.display = 'block';
     
     playSound('gameover');
-    checkHighScore(score);
+    
+    // Show leaderboard input if score is high enough
+    const lowestScore = leaderboard.length >= 10 ? leaderboard[9].score : 0;
+    if (score > lowestScore || leaderboard.length < 10) {
+        // Wait a moment, then show leaderboard input
+        setTimeout(() => {
+            const leaderboardElement = document.getElementById('leaderboard');
+            const leaderboardInput = document.getElementById('leaderboardInput');
+            if (leaderboardElement) leaderboardElement.style.display = 'block';
+            if (leaderboardInput) leaderboardInput.style.display = 'block';
+            const nameInput = document.getElementById('playerName');
+            if (nameInput) nameInput.focus();
+        }, 500);
+    }
 }
 
 function togglePause() {
@@ -857,6 +870,7 @@ function initializeNewFeatures() {
             saveScoreToLeaderboard(name);
         });
     }
+}
     
     // Show leaderboard button
     const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
@@ -873,6 +887,15 @@ function initializeNewFeatures() {
         });
     }
     
+      const menuBtn = document.getElementById('menuBtn');
+    if (menuBtn) {
+        menuBtn.addEventListener('click', () => {
+            const gameOverElement = document.getElementById('gameOver');
+            if (gameOverElement) gameOverElement.style.display = 'none';
+            showMenu();
+        });
+    }
+
     // Initialize audio on first interaction
     const initAudioOnClick = () => {
         initAudio();
@@ -882,7 +905,6 @@ function initializeNewFeatures() {
     
     document.addEventListener('click', initAudioOnClick);
     document.addEventListener('touchstart', initAudioOnClick);
-}
 
 // Initialize Game
 function init() {
