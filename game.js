@@ -2,7 +2,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Set canvas size
+// Set canvas size - GAME'S INTERNAL SIZE
 canvas.width = 1000;
 canvas.height = 700;
 
@@ -249,26 +249,33 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-// ============ MOBILE CONTROLS ============
+// ============ MOBILE CONTROLS - FULL SCREEN FIX ============
 if (canvas) {
-    // Function to get correct touch position relative to canvas
     function getCanvasTouchPosition(touch) {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;   // Scale factor for X
-        const scaleY = canvas.height / rect.height; // Scale factor for Y
+        const canvasActualWidth = canvas.width;
+        const canvasActualHeight = canvas.height;
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
         
-        // Calculate position within canvas (0 to canvas.width)
-        let canvasX = (touch.clientX - rect.left) * scaleX;
-        let canvasY = (touch.clientY - rect.top) * scaleY;
+        const scaleX = canvasActualWidth / displayWidth;
+        const scaleY = canvasActualHeight / displayHeight;
         
-        // Clamp values to canvas boundaries
-        canvasX = Math.max(0, Math.min(canvas.width, canvasX));
-         canvasY = Math.max(0, Math.min(canvas.height, canvasY));
+        let relativeX = touch.clientX - rect.left;
+        let relativeY = touch.clientY - rect.top;
+        
+        relativeX = Math.max(0, Math.min(displayWidth, relativeX));
+        relativeY = Math.max(0, Math.min(displayHeight, relativeY));
+        
+        let canvasX = relativeX * scaleX;
+        let canvasY = relativeY * scaleY;
+        
+        canvasX = Math.max(0, Math.min(canvasActualWidth, canvasX));
+        canvasY = Math.max(0, Math.min(canvasActualHeight, canvasY));
         
         return { x: canvasX, y: canvasY };
     }
     
-    // Touch start - move and shoot
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         
@@ -276,18 +283,16 @@ if (canvas) {
             const touch = e.touches[0];
             const pos = getCanvasTouchPosition(touch);
             
-            // Move player to touch position
-            player.x = pos.x - player.width/2;
-            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-
-             // Shoot on touch
+            let newX = pos.x - player.width/2;
+            newX = Math.max(0, Math.min(canvas.width - player.width, newX));
+            player.x = newX;
+            
             if (player.shootCooldown <= 0) {
                 shoot();
             }
         }
     });
     
-    // Touch move - drag to move
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         
@@ -295,18 +300,21 @@ if (canvas) {
             const touch = e.touches[0];
             const pos = getCanvasTouchPosition(touch);
             
-            // Move player to touch position
-            player.x = pos.x - player.width/2;
-            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            let newX = pos.x - player.width/2;
+            newX = Math.max(0, Math.min(canvas.width - player.width, newX));
+            player.x = newX;
         }
     });
-
-     // Touch end - no action needed, but prevent default
+    
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
     });
-
-      // Mouse move for desktop (keep this for testing)
+    
+    canvas.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+    });
+    
+    // Desktop mouse controls
     canvas.addEventListener('mousemove', (e) => {
         if (gameRunning && !paused) {
             const rect = canvas.getBoundingClientRect();
@@ -318,15 +326,14 @@ if (canvas) {
         }
     });
     
-    // Mouse click for desktop shooting
     canvas.addEventListener('click', (e) => {
         if (gameRunning && !paused && player.shootCooldown <= 0) {
             shoot();
         }
     });
 }
- 
-// Button Event Listeners - with null checks
+
+// Button Event Listeners
 const startBtn = document.getElementById('startBtn');
 if (startBtn) startBtn.addEventListener('click', startGame);
 
@@ -337,10 +344,14 @@ const resumeBtn = document.getElementById('resumeBtn');
 if (resumeBtn) resumeBtn.addEventListener('click', togglePause);
 
 const quitBtn = document.getElementById('quitBtn');
-if (quitBtn) quitBtn.addEventListener('click', () => {
-    gameRunning = false;
-    showMenu();
-});
+if (quitBtn) {
+    quitBtn.addEventListener('click', () => {
+        gameRunning = false;
+        const pauseMenu = document.getElementById('pauseMenu');
+        if (pauseMenu) pauseMenu.style.display = 'none';
+        showMenu();
+    });
+}
 
 const difficultySelect = document.getElementById('difficulty');
 if (difficultySelect) {
@@ -809,10 +820,8 @@ function gameOver() {
     
     playSound('gameover');
     
-    // Show leaderboard input if score is high enough
     const lowestScore = leaderboard.length >= 10 ? leaderboard[9].score : 0;
     if (score > lowestScore || leaderboard.length < 10) {
-        // Wait a moment, then show leaderboard input
         setTimeout(() => {
             const leaderboardElement = document.getElementById('leaderboard');
             const leaderboardInput = document.getElementById('leaderboardInput');
@@ -846,7 +855,6 @@ function showMenu() {
 function initializeNewFeatures() {
     loadLeaderboard();
     
-    // Show "How to Play" for first-time visitors
     if (!localStorage.getItem('hasSeenHowToPlay')) {
         setTimeout(() => {
             const howToPlay = document.getElementById('howToPlay');
@@ -855,7 +863,6 @@ function initializeNewFeatures() {
         localStorage.setItem('hasSeenHowToPlay', 'true');
     }
     
-    // Close popup handlers
     const closeHowToPlayBtn = document.getElementById('closeHowToPlay');
     if (closeHowToPlayBtn) {
         closeHowToPlayBtn.addEventListener('click', () => {
@@ -872,7 +879,6 @@ function initializeNewFeatures() {
         });
     }
     
-    // Mobile shoot button
     const mobileShootBtn = document.getElementById('mobileShootBtn');
     if (mobileShootBtn) {
         if ('ontouchstart' in window) {
@@ -881,7 +887,15 @@ function initializeNewFeatures() {
         
         const shootButton = document.querySelector('.shoot-button');
         if (shootButton) {
-            shootButton.addEventListener('click', () => {
+            shootButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (gameRunning && !paused && player.shootCooldown <= 0) {
+                    shoot();
+                }
+            });
+            
+            shootButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (gameRunning && !paused && player.shootCooldown <= 0) {
                     shoot();
                 }
@@ -889,7 +903,6 @@ function initializeNewFeatures() {
         }
     }
     
-    // Leaderboard close button
     const closeLeaderboardBtn = document.getElementById('closeLeaderboard');
     if (closeLeaderboardBtn) {
         closeLeaderboardBtn.addEventListener('click', () => {
@@ -898,7 +911,6 @@ function initializeNewFeatures() {
         });
     }
     
-    // Save score button
     const saveScoreBtn = document.getElementById('saveScore');
     if (saveScoreBtn) {
         saveScoreBtn.addEventListener('click', () => {
@@ -907,9 +919,7 @@ function initializeNewFeatures() {
             saveScoreToLeaderboard(name);
         });
     }
-}
     
-    // Show leaderboard button
     const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
     if (showLeaderboardBtn) {
         showLeaderboardBtn.addEventListener('click', () => {
@@ -924,7 +934,7 @@ function initializeNewFeatures() {
         });
     }
     
-      const menuBtn = document.getElementById('menuBtn');
+    const menuBtn = document.getElementById('menuBtn');
     if (menuBtn) {
         menuBtn.addEventListener('click', () => {
             const gameOverElement = document.getElementById('gameOver');
@@ -932,8 +942,7 @@ function initializeNewFeatures() {
             showMenu();
         });
     }
-
-    // Initialize audio on first interaction
+    
     const initAudioOnClick = () => {
         initAudio();
         document.removeEventListener('click', initAudioOnClick);
@@ -942,8 +951,8 @@ function initializeNewFeatures() {
     
     document.addEventListener('click', initAudioOnClick);
     document.addEventListener('touchstart', initAudioOnClick);
+}
 
-// Initialize Game
 function init() {
     updateLivesDisplay();
     const highScoreElement = document.getElementById('highScore');
@@ -953,5 +962,4 @@ function init() {
     gameLoop();
 }
 
-// Start the game
 init();
