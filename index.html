@@ -17,7 +17,7 @@
                 <div>LEVEL: <span id="level">1</span></div>
             </div>
             <div class="lives">
-                <span id="lives"></span>
+                <span id="lives">❤️❤️❤️</span>
             </div>
             <div class="powerup-indicator" id="powerupIndicator"></div>
         </div>
@@ -30,7 +30,7 @@
                 <p>P to pause</p>
             </div>
             <button id="startBtn">START GAME</button>
-            <button id="showLeaderboardBtn" style="background: linear-gradient(135deg, #ffaa44, #ff6600);">🏆 VIEW LEADERBOARD 🏆</button>
+            <button id="showLeaderboardBtn" style="background: linear-gradient(135deg, #ffaa44, #ff6600);">🏆 LEADERBOARD 🏆</button>
             <div class="difficulty">
                 <label>Difficulty:</label>
                 <select id="difficulty">
@@ -53,12 +53,10 @@
             <button id="restartBtn">PLAY AGAIN</button>
         </div>
         
-        <!-- Mobile Shoot Button -->
         <div id="mobileShootBtn" class="mobile-shoot-btn" style="display: none;">
             <div class="shoot-button">🔫 FIRE!</div>
         </div>
         
-        <!-- Leaderboard -->
         <div id="leaderboard" class="leaderboard" style="display: none;">
             <div class="leaderboard-header">
                 <h3>🏆 HIGH SCORES 🏆</h3>
@@ -74,7 +72,6 @@
         </div>
     </div>
     
-    <!-- How to Play Popup -->
     <div id="howToPlay" class="how-to-play" style="display: none;">
         <div class="how-to-play-content">
             <span class="close-popup">&times;</span>
@@ -90,7 +87,6 @@
                     <h3>📱 MOBILE CONTROLS</h3>
                     <p>👆 Touch & Drag - Move ship</p>
                     <p>🔫 Tap anywhere - Shoot</p>
-                    <p>🎯 Red button - Quick fire!</p>
                 </div>
                 <div class="control-section">
                     <h3>⚡ POWERUPS</h3>
@@ -98,18 +94,12 @@
                     <p>🛡️ Shield - Temporary invincibility</p>
                     <p>💥 Multi-shot - Shoot 3 bullets!</p>
                 </div>
-                <div class="control-section">
-                    <h3>🎯 TIPS</h3>
-                    <p>Small asteroids = More points!</p>
-                    <p>Collect powerups from destroyed asteroids</p>
-                    <p>Reach higher levels for more asteroids</p>
-                    <p>Beat the high score to enter leaderboard!</p>
-                </div>
             </div>
             <button id="closeHowToPlay">GOT IT! LET'S PLAY 🚀</button>
         </div>
     </div>
     
+    <!-- IMPORTANT: Script at the BOTTOM -->
     <script src="game.js"></script>
 </body>
 </html>
