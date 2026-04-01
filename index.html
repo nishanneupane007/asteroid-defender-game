@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Asteroid Defender - Space Shooter</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -44,13 +44,16 @@
         <div class="pause-menu" id="pauseMenu" style="display: none;">
             <h2>PAUSED</h2>
             <button id="resumeBtn">RESUME</button>
-            <button id="quitBtn">QUIT</button>
+            <button id="quitBtn">QUIT TO MENU</button>
         </div>
         
         <div class="game-over" id="gameOver" style="display: none;">
             <h2>GAME OVER</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
-            <button id="restartBtn">PLAY AGAIN</button>
+            <div class="game-over-buttons">
+                <button id="restartBtn">PLAY AGAIN</button>
+                <button id="menuBtn" style="background: linear-gradient(135deg, #ffaa44, #ff6600);">🏠 MAIN MENU</button>
+            </div>
         </div>
         
         <div id="mobileShootBtn" class="mobile-shoot-btn" style="display: none;">
@@ -86,7 +89,7 @@
                 <div class="control-section">
                     <h3>📱 MOBILE CONTROLS</h3>
                     <p>👆 Touch & Drag - Move ship</p>
-                    <p>🔫 Tap anywhere - Shoot</p>
+                    <p>🔫 Tap anywhere or use FIRE button</p>
                 </div>
                 <div class="control-section">
                     <h3>⚡ POWERUPS</h3>
@@ -99,7 +102,6 @@
         </div>
     </div>
     
-    <!-- IMPORTANT: Script at the BOTTOM -->
     <script src="game.js"></script>
 </body>
 </html>
