@@ -41,6 +41,140 @@ const difficultySettings = {
     hard: { asteroidSpeed: 5, spawnRate: 30, maxAsteroids: 12, bulletSpeed: 12 }
 };
 
+// ============ SOUND SYSTEM ============
+let audioContext = null;
+let sounds = {};
+
+function initAudio() {
+    if (audioContext) return;
+    
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    sounds = {
+        shoot: function() {
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800;
+            gain.gain.value = 0.2;
+            oscillator.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        },
+        
+        explosion: function() {
+            const noise = audioContext.createBufferSource();
+            const bufferSize = audioContext.sampleRate * 0.5;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            noise.buffer = buffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 1000;
+            
+            const gain = audioContext.createGain();
+            gain.gain.value = 0.3;
+            
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioContext.destination);
+            
+            noise.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.8);
+        },
+        
+        powerup: function() {
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 523.25;
+            gain.gain.value = 0.2;
+            oscillator.start();
+            
+            oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.2);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+    };
+}
+
+function playSound(soundName) {
+    if (audioContext && sounds[soundName]) {
+        sounds[soundName]();
+    }
+}
+
+// ============ LEADERBOARD SYSTEM ============
+let leaderboard = [];
+let currentScore = 0;
+
+function loadLeaderboard() {
+    const saved = localStorage.getItem('asteroidLeaderboard');
+    if (saved) {
+        leaderboard = JSON.parse(saved);
+    } else {
+        leaderboard = [
+            { name: "🚀 MASTER", score: 5000 },
+            { name: "⭐ STAR", score: 3000 },
+            { name: "💪 NOOB", score: 1000 }
+        ];
+    }
+    displayLeaderboard();
+}
+
+function saveLeaderboard() {
+    localStorage.setItem('asteroidLeaderboard', JSON.stringify(leaderboard));
+    displayLeaderboard();
+}
+
+function displayLeaderboard() {
+    const listElement = document.getElementById('leaderboardList');
+    if (!listElement) return;
+    
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    
+    listElement.innerHTML = '';
+    leaderboard.forEach((entry, index) => {
+        const div = document.createElement('div');
+        div.className = 'score-entry';
+        div.innerHTML = `
+            <span class="score-rank">${index + 1}</span>
+            <span class="score-name">${entry.name}</span>
+            <span class="score-value">${entry.score}</span>
+        `;
+        listElement.appendChild(div);
+    });
+}
+
+function checkHighScore(scoreValue) {
+    currentScore = scoreValue;
+    const lowestScore = leaderboard.length >= 10 ? leaderboard[9].score : 0;
+    
+    if (scoreValue > lowestScore || leaderboard.length < 10) {
+        document.getElementById('leaderboardInput').style.display = 'block';
+        document.getElementById('playerName').focus();
+    }
+}
+
+function saveScoreToLeaderboard(name) {
+    if (!name.trim()) name = "ANONYMOUS";
+    
+    leaderboard.push({ name: name.toUpperCase().slice(0, 15), score: currentScore });
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    saveLeaderboard();
+    document.getElementById('leaderboardInput').style.display = 'none';
+}
+
 // Input Handling
 const keys = {
     ArrowLeft: false,
@@ -73,6 +207,54 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
+// ============ MOBILE CONTROLS ============
+let touchActive = false;
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    
+    player.x = touchX - player.width/2;
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    
+    if (gameRunning && !paused && player.shootCooldown <= 0) {
+        shoot();
+    }
+    
+    touchActive = true;
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    
+    player.x = touchX - player.width/2;
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+});
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touchActive = false;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (gameRunning && !paused) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        player.x = mouseX - player.width/2;
+        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    if (gameRunning && !paused && player.shootCooldown <= 0) {
+        shoot();
+    }
+});
+
+// Button Event Listeners
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('restartBtn').addEventListener('click', startGame);
 document.getElementById('resumeBtn').addEventListener('click', togglePause);
@@ -96,7 +278,8 @@ function shoot() {
     
     player.shootCooldown = 10;
     
-    // Add shooting effect
+    playSound('shoot');
+    
     canvas.style.animation = 'shoot-effect 0.1s ease-out';
     setTimeout(() => canvas.style.animation = '', 100);
 }
@@ -170,14 +353,12 @@ function updatePlayer() {
         player.shootCooldown--;
     }
     
-    // Movement
     let moveLeft = keys.ArrowLeft || keys.KeyA;
     let moveRight = keys.ArrowRight || keys.KeyD;
     
     if (moveLeft) player.x -= player.speed;
     if (moveRight) player.x += player.speed;
     
-    // Boundaries
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 }
 
@@ -193,28 +374,24 @@ function updateBullets() {
     }
 }
 
-// Update Asteroids - FIXED: Now asteroids actually fall!
+// Update Asteroids
 function updateAsteroids() {
     for (let i = 0; i < asteroids.length; i++) {
-        // Move asteroid downward
         asteroids[i].y += asteroids[i].speed;
         asteroids[i].rotation += asteroids[i].rotationSpeed;
         
-        // Remove if off screen (below canvas)
         if (asteroids[i].y > canvas.height + asteroids[i].height) {
             asteroids.splice(i, 1);
             i--;
             continue;
         }
         
-        // Remove if off screen (above canvas - shouldn't happen but just in case)
         if (asteroids[i].y + asteroids[i].height < 0) {
             asteroids.splice(i, 1);
             i--;
             continue;
         }
         
-        // Collision with player
         if (player.invincibleFrames <= 0 && !paused) {
             if (collision(player, asteroids[i])) {
                 lives--;
@@ -255,6 +432,8 @@ function updatePowerups() {
 
 // Apply Powerup
 function applyPowerup(type) {
+    playSound('powerup');
+    
     switch(type) {
         case 'rapidFire':
             player.shootCooldown = 0;
@@ -286,32 +465,25 @@ function checkCollisions() {
     for (let i = 0; i < bullets.length; i++) {
         for (let j = 0; j < asteroids.length; j++) {
             if (collision(bullets[i], asteroids[j])) {
-                // Remove the bullet
                 bullets.splice(i, 1);
                 
-                // Calculate points based on asteroid size
                 let pointsEarned = Math.floor(100 / (asteroids[j].width / 20));
                 if (pointsEarned < 10) pointsEarned = 10;
                 if (pointsEarned > 100) pointsEarned = 100;
                 
-                // Add to score
                 score += pointsEarned;
                 updateScore();
                 
-                // Create explosion effect at asteroid position
                 createParticles(asteroids[j].x + asteroids[j].width/2, 
                               asteroids[j].y + asteroids[j].height/2, '#ffaa00');
+                playSound('explosion');
                 
-                // Chance to spawn powerup (15%)
                 if (Math.random() < 0.15) {
                     spawnPowerup(asteroids[j].x + asteroids[j].width/2, 
                                asteroids[j].y + asteroids[j].height/2);
                 }
                 
-                // Remove the asteroid
                 asteroids.splice(j, 1);
-                
-                // Break out of inner loop since bullet is gone
                 break;
             }
         }
@@ -338,7 +510,6 @@ function drawPlayer() {
         ctx.globalAlpha = 0.5;
     }
     
-    // Draw player ship (triangle)
     ctx.beginPath();
     ctx.moveTo(player.x + player.width/2, player.y);
     ctx.lineTo(player.x + player.width, player.y + player.height);
@@ -350,7 +521,6 @@ function drawPlayer() {
     ctx.strokeStyle = '#fff';
     ctx.stroke();
     
-    // Engine glow
     ctx.beginPath();
     ctx.moveTo(player.x + player.width/2 - 5, player.y + player.height);
     ctx.lineTo(player.x + player.width/2, player.y + player.height + 10);
@@ -375,12 +545,8 @@ function drawAsteroids() {
         ctx.rotate(asteroid.rotation);
         ctx.fillStyle = '#8b7355';
         ctx.fillRect(-asteroid.width/2, -asteroid.height/2, asteroid.width, asteroid.height);
-        
-        // Add craters
         ctx.fillStyle = '#5d3a1a';
         ctx.fillRect(-asteroid.width/4, -asteroid.height/4, asteroid.width/2, asteroid.height/2);
-        ctx.fillStyle = '#4a2e12';
-        ctx.fillRect(-asteroid.width/3, asteroid.height/6, asteroid.width/3, asteroid.height/4);
         ctx.restore();
     });
 }
@@ -424,7 +590,6 @@ function updateScore() {
         document.getElementById('highScore').textContent = highScore;
     }
     
-    // Level progression
     const newLevel = Math.floor(score / 500) + 1;
     if (newLevel > level) {
         level = newLevel;
@@ -439,7 +604,6 @@ function updateLivesDisplay() {
 }
 
 // Game Loop
-let lastSpawnTime = 0;
 let frameCount = 0;
 
 function gameLoop() {
@@ -448,40 +612,31 @@ function gameLoop() {
         return;
     }
     
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw background stars
     drawStars();
     
-    // Update game objects
     updatePlayer();
     updateBullets();
-    updateAsteroids();  // This makes asteroids fall
+    updateAsteroids();
     updatePowerups();
     updateParticles();
     checkCollisions();
     
-    // Spawn asteroids based on level and difficulty
     frameCount++;
     
-    // Spawn new asteroids periodically
-    if (frameCount % 30 === 0) {  // Spawn every 30 frames
+    if (frameCount % 30 === 0) {
         if (asteroids.length < difficultySettings[difficulty].maxAsteroids + Math.floor(level / 2)) {
             spawnAsteroid();
         }
     }
     
-    // Additional random spawning
     if (Math.random() < 0.03 && asteroids.length < difficultySettings[difficulty].maxAsteroids + Math.floor(level / 2)) {
         spawnAsteroid();
     }
     
-    // Rapid fire and multi-shot powerup effect
     if (player.powerupActive && player.powerupTimer > 0) {
         if (player.powerupTimer % 5 === 0 && player.shootCooldown === 0) {
             shoot();
-            // Multi-shot effect
             if (player.powerupTimer > 0 && player.powerupActive && player.powerupTimer % 10 === 0) {
                 setTimeout(() => {
                     if (gameRunning && !paused && player.powerupActive) {
@@ -505,7 +660,6 @@ function gameLoop() {
         }
     }
     
-    // Draw everything
     drawPlayer();
     drawBullets();
     drawAsteroids();
@@ -517,7 +671,6 @@ function gameLoop() {
 
 // Game Control Functions
 function startGame() {
-    // Reset game state
     gameRunning = true;
     paused = false;
     score = 0;
@@ -535,19 +688,16 @@ function startGame() {
     player.powerupActive = false;
     player.powerupTimer = 0;
     
-    // Update UI
     updateScore();
     updateLivesDisplay();
     document.getElementById('level').textContent = '1';
     document.getElementById('highScore').textContent = highScore;
     
-    // Hide menus
     document.getElementById('menu').style.display = 'none';
     document.getElementById('gameOver').style.display = 'none';
     document.getElementById('pauseMenu').style.display = 'none';
     document.getElementById('powerupIndicator').style.opacity = '0';
     
-    // Spawn initial asteroids
     for (let i = 0; i < 4; i++) {
         setTimeout(() => {
             if (gameRunning) spawnAsteroid();
@@ -559,6 +709,7 @@ function gameOver() {
     gameRunning = false;
     document.getElementById('finalScore').textContent = score;
     document.getElementById('gameOver').style.display = 'block';
+    checkHighScore(score);
 }
 
 function togglePause() {
@@ -574,11 +725,108 @@ function showMenu() {
     document.getElementById('pauseMenu').style.display = 'none';
 }
 
+// ============ INITIALIZATION CODE (ALL NEW FEATURES) ============
+// This is where all the initialization happens - ADD THIS SECTION
+
+function initializeNewFeatures() {
+    // Load leaderboard
+    loadLeaderboard();
+    
+    // Show "How to Play" for first-time visitors
+    if (!localStorage.getItem('hasSeenHowToPlay')) {
+        setTimeout(() => {
+            const howToPlay = document.getElementById('howToPlay');
+            if (howToPlay) {
+                howToPlay.style.display = 'flex';
+            }
+        }, 500);
+        localStorage.setItem('hasSeenHowToPlay', 'true');
+    }
+    
+    // Close popup handlers
+    const closeHowToPlayBtn = document.getElementById('closeHowToPlay');
+    const closePopupBtn = document.querySelector('.close-popup');
+    
+    if (closeHowToPlayBtn) {
+        closeHowToPlayBtn.addEventListener('click', () => {
+            document.getElementById('howToPlay').style.display = 'none';
+        });
+    }
+    
+    if (closePopupBtn) {
+        closePopupBtn.addEventListener('click', () => {
+            document.getElementById('howToPlay').style.display = 'none';
+        });
+    }
+    
+    // Mobile shoot button
+    const mobileShootBtn = document.getElementById('mobileShootBtn');
+    if (mobileShootBtn) {
+        if ('ontouchstart' in window) {
+            mobileShootBtn.style.display = 'block';
+        }
+        
+        const shootButton = document.querySelector('.shoot-button');
+        if (shootButton) {
+            shootButton.addEventListener('click', () => {
+                if (gameRunning && !paused && player.shootCooldown <= 0) {
+                    shoot();
+                }
+            });
+        }
+    }
+    
+    // Leaderboard close button
+    const closeLeaderboardBtn = document.getElementById('closeLeaderboard');
+    if (closeLeaderboardBtn) {
+        closeLeaderboardBtn.addEventListener('click', () => {
+            document.getElementById('leaderboard').style.display = 'none';
+        });
+    }
+    
+    // Save score button
+    const saveScoreBtn = document.getElementById('saveScore');
+    if (saveScoreBtn) {
+        saveScoreBtn.addEventListener('click', () => {
+            const name = document.getElementById('playerName').value;
+            saveScoreToLeaderboard(name);
+        });
+    }
+    
+    // Show leaderboard button in menu
+    const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+    if (showLeaderboardBtn) {
+        showLeaderboardBtn.addEventListener('click', () => {
+            const leaderboardElement = document.getElementById('leaderboard');
+            if (leaderboardElement.style.display === 'none' || !leaderboardElement.style.display) {
+                leaderboardElement.style.display = 'block';
+            } else {
+                leaderboardElement.style.display = 'none';
+            }
+        });
+    }
+    
+    // Initialize audio on first user interaction
+    const initAudioOnClick = () => {
+        initAudio();
+        document.removeEventListener('click', initAudioOnClick);
+        document.removeEventListener('touchstart', initAudioOnClick);
+    };
+    
+    document.addEventListener('click', initAudioOnClick);
+    document.addEventListener('touchstart', initAudioOnClick);
+}
+
 // Initialize Game
 function init() {
     updateLivesDisplay();
     document.getElementById('highScore').textContent = highScore;
     showMenu();
+    
+    // Initialize all new features
+    initializeNewFeatures();
+    
+    // Start game loop
     gameLoop();
 }
 
