@@ -251,44 +251,81 @@ document.addEventListener('keyup', (e) => {
 
 // ============ MOBILE CONTROLS ============
 if (canvas) {
+    // Function to get correct touch position relative to canvas
+    function getCanvasTouchPosition(touch) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;   // Scale factor for X
+        const scaleY = canvas.height / rect.height; // Scale factor for Y
+        
+        // Calculate position within canvas (0 to canvas.width)
+        let canvasX = (touch.clientX - rect.left) * scaleX;
+        let canvasY = (touch.clientY - rect.top) * scaleY;
+        
+        // Clamp values to canvas boundaries
+        canvasX = Math.max(0, Math.min(canvas.width, canvasX));
+         canvasY = Math.max(0, Math.min(canvas.height, canvasY));
+        
+        return { x: canvasX, y: canvasY };
+    }
+    
+    // Touch start - move and shoot
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
         
-        player.x = touchX - player.width/2;
-        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-        
-        if (gameRunning && !paused && player.shootCooldown <= 0) {
-            shoot();
+        if (gameRunning && !paused) {
+            const touch = e.touches[0];
+            const pos = getCanvasTouchPosition(touch);
+            
+            // Move player to touch position
+            player.x = pos.x - player.width/2;
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+             // Shoot on touch
+            if (player.shootCooldown <= 0) {
+                shoot();
+            }
         }
     });
-
+    
+    // Touch move - drag to move
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
         
-        player.x = touchX - player.width/2;
-        player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
         if (gameRunning && !paused) {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            player.x = mouseX - player.width/2;
+            const touch = e.touches[0];
+            const pos = getCanvasTouchPosition(touch);
+            
+            // Move player to touch position
+            player.x = pos.x - player.width/2;
             player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
         }
     });
 
+     // Touch end - no action needed, but prevent default
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+    });
+
+      // Mouse move for desktop (keep this for testing)
+    canvas.addEventListener('mousemove', (e) => {
+        if (gameRunning && !paused) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            let mouseX = (e.clientX - rect.left) * scaleX;
+            mouseX = Math.max(0, Math.min(canvas.width, mouseX));
+            player.x = mouseX - player.width/2;
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+        }
+    });
+    
+    // Mouse click for desktop shooting
     canvas.addEventListener('click', (e) => {
         if (gameRunning && !paused && player.shootCooldown <= 0) {
             shoot();
         }
     });
 }
-
+ 
 // Button Event Listeners - with null checks
 const startBtn = document.getElementById('startBtn');
 if (startBtn) startBtn.addEventListener('click', startGame);
